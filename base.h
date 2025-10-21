@@ -65,7 +65,7 @@
 
 // == logging macros ==
 #if defined(DEFINE_DEBUG)
-#    define LOG(str, ...)                     \
+#    define log_info(str, ...)                     \
         do {                                  \
             fprintf(stdout,                   \
                     "INFO [%s:%d] " str "\n", \
@@ -75,12 +75,12 @@
         } while (0);
 
 #else
-#    define LOG(str, ...)
+#    define log_info(str, ...)
 #endif
 
 // == error handling ==
 #if defined(DEFINE_ERR_HANDLING)
-#    define ERR(str, ...)                    \
+#    define log_err(str, ...)                    \
         do {                                 \
             fprintf(stderr,                  \
                     "ERR [%s:%d] " str "\n", \
@@ -90,7 +90,7 @@
         } while (0);
 
 #else
-#    define ERR(str, ...)
+#    define log_err(str, ...)
 #endif
 
 // == base types ==
