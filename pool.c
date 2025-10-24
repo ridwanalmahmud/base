@@ -9,9 +9,10 @@ bool pool_init(Pool *pool, size_t chunk_size, size_t chunks_per_block) {
     }
 
     if (chunk_size < sizeof(Chunk)) {
+        size_t new_size = sizeof(Chunk);
         log_info(
-            "Chunk size increased from %zu to %zu", chunk_size, sizeof(Chunk));
-        chunk_size = sizeof(Chunk);
+            "Chunk size increased from %zu to %zu", chunk_size, new_size);
+        chunk_size = new_size;
     }
 
     pool->free_list = nullptr;
@@ -31,7 +32,7 @@ void *pool_alloc(Pool *pool) {
     }
 
     if (pool->free_list == nullptr) {
-        log_info("Free list empty, allocating new block");
+        log_info("Free list empty, allocating new block", (void));
         Chunk *block = block_alloc(pool);
         if (block == nullptr) {
             log_err("Failed to allocate new block");

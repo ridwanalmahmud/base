@@ -46,7 +46,7 @@
 #endif
 
 // == simd setup ==
-#if defined(DEFINE_SIMD)
+#if defined(ENABLE_SIMD)
 #    if defined(ARCH_X86)
 #        define DEFINE_SIMD__SSE
 #        include <emmintrin.h>
@@ -64,8 +64,8 @@
 #endif
 
 // == logging macros ==
-#if defined(DEFINE_DEBUG)
-#    define log_info(str, ...)                     \
+#if defined(ENABLE_DEBUG)
+#    define log_info(str, ...)                \
         do {                                  \
             fprintf(stdout,                   \
                     "INFO [%s:%d] " str "\n", \
@@ -79,19 +79,14 @@
 #endif
 
 // == error handling ==
-#if defined(DEFINE_ERR_HANDLING)
-#    define log_err(str, ...)                    \
-        do {                                 \
-            fprintf(stderr,                  \
-                    "ERR [%s:%d] " str "\n", \
-                    __FILE__,                \
-                    __LINE__,                \
-                    ##__VA_ARGS__);          \
-        } while (0);
-
-#else
-#    define log_err(str, ...)
-#endif
+#define log_err(str, ...)                \
+    do {                                 \
+        fprintf(stderr,                  \
+                "ERR [%s:%d] " str "\n", \
+                __FILE__,                \
+                __LINE__,                \
+                ##__VA_ARGS__);          \
+    } while (0);
 
 // == base types ==
 // not much useful tbh
