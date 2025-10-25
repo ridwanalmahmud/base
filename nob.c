@@ -24,6 +24,8 @@ Build_Data items = {
     .src_count = arr_len(srcs),
     .objs = nullptr,
     .obj_count = 0,
+    .obj_dir = BUILD_DIR,
+    .is_compiled = false,
 };
 
 int main(int argc, char **argv) {
@@ -32,10 +34,6 @@ int main(int argc, char **argv) {
         return 1;
 
     Nob_Cmd cmd = {0};
-
-    if (!compile(&cmd, &items, BUILD_DIR)) {
-        nob_log(NOB_ERROR, "Compilation failed");
-    }
 
     if (!build_shared(&cmd, &items, SO_NAME)) {
         nob_log(NOB_ERROR, "Failed building shared object");

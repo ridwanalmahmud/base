@@ -15,6 +15,8 @@
 #define is_odd(a) ((a) & 1)
 #define is_even(a) ((a) & 0)
 #define sign(a) ((a) >= 0.0 ? 1 : -1)
+#define clamp(a, min, max) \
+    (((a) < (min)) ? (min) : (((a) > (max)) ? (max) : (a)))
 
 // == compiler detection ==
 #if defined(__clang__)
@@ -65,28 +67,28 @@
 
 // == logging macros ==
 #if defined(ENABLE_DEBUG)
-#    define log_info(str, ...)                \
-        do {                                  \
-            fprintf(stdout,                   \
-                    "INFO [%s:%d] " str "\n", \
-                    __FILE__,                 \
-                    __LINE__,                 \
-                    ##__VA_ARGS__);           \
-        } while (0);
+#    define log_info(...)                                \
+        do {                                             \
+            fprintf(stdout,                              \
+                    "\033[1;34mINFO\033[0m [%s:%d] => ", \
+                    __FILE__,                            \
+                    __LINE__);                           \
+            fprintf(stdout, __VA_ARGS__);                \
+            fprintf(stdout, "\n");                       \
+        } while (0)
 
 #else
 #    define log_info(str, ...)
 #endif
 
 // == error handling ==
-#define log_err(str, ...)                \
-    do {                                 \
-        fprintf(stderr,                  \
-                "ERR [%s:%d] " str "\n", \
-                __FILE__,                \
-                __LINE__,                \
-                ##__VA_ARGS__);          \
-    } while (0);
+#define log_err(...)                                                           \
+    do {                                                                       \
+        fprintf(                                                               \
+            stderr, "\033[1;31mERROR\033[0m [%s:%d] => ", __FILE__, __LINE__); \
+        fprintf(stderr, __VA_ARGS__);                                          \
+        fprintf(stderr, "\n");                                                 \
+    } while (0)
 
 // == base types ==
 // not much useful tbh

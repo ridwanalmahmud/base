@@ -5,18 +5,22 @@
 #include "../base.h"
 
 // === set compiler ===
-// never used windows or msvc, so i dont have a f**king idea
+// never used windows or msvc, so i dont have a f**king(freaking without 'a') idea
 #if defined(COMPILER_CLANG)
 #    define CC "clang"
-#    define AR "ar"
 #elif defined(COMPILER_GCC)
 #    define CC "gcc"
-#    define AR "ar"
 #elif defined(COMPILER_CL)
-#    define AR "lib"
 #    define CC "cl"
 #else
 #    error "ONLY clang, gcc and msvc are supported"
+#endif
+
+// === set archiver ===
+#if defined(PLATFORM_LINUX)
+#    define AR "ar"
+#elif defined(PLATFORM_WIN)
+#    define AR "lib"
 #endif
 
 // === build types ===
@@ -37,9 +41,10 @@
 #    if defined(BUILD_RELEASE)
 #        define COMPILE_FLAGS                                     \
             "-O3", "-Os", "-march=native", "-D_FORTIFY_SOURCE=2", \
-                "-fstack-protector-strong"
-#        define LINK_FLAGS "-flto=auto", "-Wl,-z,relro"
+                "-fstack-protector-strong", "-fPIC"
+#        define LINK_FLAGS "-flto=auto", "-Wl,-z,relro", "-pie"
 #    endif
+#    define LIB_COMPILE_FLAGS
 #    define SO_LINK_FLAGS "-shared"
 #    define AR_LINK_FLAGS "rcs"
 
@@ -51,7 +56,7 @@
 #    endif
 #    if defined(BUILD_RELEASE)
 #        define COMPILE_FLAGS "/O2", "/Ob2", "/Ot", "/GL", "/MT"
-#        define LINK_FLAGS "/LTCG"
+#        define LINK_FLAGS "/LTCG", "/DYNAMICBASE"
 #    endif
 #    define SO_LINK_FLAGS "/DLL"
 #endif
@@ -59,11 +64,12 @@
 typedef struct {
     const char **srcs;
     size_t src_count;
-    const char **objs;
-    size_t obj_count;
+    const char **objs; // objs returned by compiling srcs
+    size_t obj_count; // to ensure src_count == obj_count
+    const char *obj_dir;
+    bool is_compiled; // to ensure srcs are compiled only once
 } Build_Data;
 
-bool compile(Nob_Cmd *cmd, Build_Data *items, const char *out_dir);
 bool build_exec(Nob_Cmd *cmd, Build_Data *items, const char *exec_name);
 bool build_shared(Nob_Cmd *cmd, Build_Data *items, const char *so_name);
 bool build_static(Nob_Cmd *cmd, Build_Data *items, const char *ar_name);
@@ -78,6 +84,7 @@ bool build_static(Nob_Cmd *cmd, Build_Data *items, const char *ar_name);
 #define OBJ_DIR "obj"
 #define EXEC "build/main"
 
+// define source files
 static const char *srcs[] = {
     "src/main.c",
     "ui/colors.c"
@@ -88,6 +95,8 @@ Build_Data items = {
     .src_count = arr_len(srcs),
     .objs = nullptr,
     .obj_count = 0,
+    .obj_dir = OBJ_DIR,
+    .is_compiled = false,
 };
 
 int main(int argc, char **argv) {
@@ -95,11 +104,9 @@ int main(int argc, char **argv) {
 
     Nob_Cmd cmd = {0};
 
-    if (!compile(&cmd, &items, OBJ_DIR)) {
-        nob_log(NOB_ERROR, "Compilation failed");
-    }
-
-    if (nob_mkdir_if_not_exists(BUILD_DIR))
+    // OBJ_DIR is made internally
+    // exec dir has to be build separately
+    if (!nob_mkdir_if_not_exists(BUILD_DIR))
         return false;
 
     if (!build_exec(&cmd, &items, EXEC)) {
@@ -109,5 +116,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 */
+// COMPILE:
+// clang build/build.c nob.c -o nob
 
 #endif

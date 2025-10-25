@@ -30,14 +30,21 @@ void styled_text(Style style, const char *text);
 #include "ui/colors.h"
 
 int main(void) {
-    Colors fg = COLOR_RED;
-    Colors bg = COLOR_WHITE;
+    // define {r, g, b};
+    Colors fg = {170, 170, 170};
+    Colors bg = COLOR_RED;
+
+    // define {fg, bg, bold, italic, underline}
     Style style = {fg, bg, false, false, true};
+
+    // print styled text
     char *content = "Hello! gracious\n";
     styled_text(style, content);
 
     return 0;
 }
 */
+// COMPILE:
+// clang ui/colors.c main.c -o main
 
 #endif
