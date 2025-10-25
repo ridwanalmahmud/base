@@ -1,2 +1,8 @@
 main.c
 main
+item.c
+item
+nob
+obj/
+libbase.so
+libbase.a
