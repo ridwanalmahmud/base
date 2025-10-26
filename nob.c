@@ -14,9 +14,10 @@
 #endif
 
 static const char *srcs[] = {
-    "ui/colors.c",
-    "build/build.c",
-    "mem/pool.c",
+    "src/ui/colors.c",
+    "src/build/build.c",
+    "src/mem/pool.c",
+    "src/ds/str.c",
 };
 
 Build_Data items = {

@@ -1,4 +1,4 @@
-#include "colors.h"
+#include "ui/colors.h"
 #include <stdio.h>
 
 static inline void color_reset(void) {

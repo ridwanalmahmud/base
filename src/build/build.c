@@ -1,4 +1,4 @@
-#include "build.h"
+#include "build/build.h"
 
 // only available in current file as the functions call this internally
 static bool compile(Nob_Cmd *cmd, Build_Data *items, bool is_lib) {
@@ -31,7 +31,7 @@ static bool compile(Nob_Cmd *cmd, Build_Data *items, bool is_lib) {
 
         objs[i] = out_path;
 
-        nob_cmd_append(cmd, CC, COMMON_FLAGS, COMPILE_FLAGS);
+        nob_cmd_append(cmd, CC, COMMON_FLAGS, COMPILE_FLAGS, "-Iinclude");
         if (is_lib) {
             nob_cmd_append(cmd, "-fPIC");
         }

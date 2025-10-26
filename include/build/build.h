@@ -2,7 +2,7 @@
 #define BUILD_H
 
 #include "nob.h"
-#include "../base.h"
+#include "base.h"
 
 // === set compiler ===
 // never used windows or msvc, so i dont have a f**king(freaking without 'a') idea
@@ -76,50 +76,5 @@ bool build_exec(Nob_Cmd *cmd, Build_Data *items, const char *exec_name);
 bool build_shared(Nob_Cmd *cmd, Build_Data *items, const char *so_name);
 // Build static library
 bool build_static(Nob_Cmd *cmd, Build_Data *items, const char *ar_name);
-
-// USAGE:
-/*
-#define NOB_IMPLEMENTATION
-
-#include "build/build.h"
-
-#define BUILD_DIR "build"
-#define OBJ_DIR "obj"
-#define EXEC "build/main"
-
-// define source files
-static const char *srcs[] = {
-    "src/main.c",
-    "ui/colors.c"
-};
-
-Build_Data items = {
-    .srcs = srcs,
-    .src_count = arr_len(srcs),
-    .objs = nullptr,
-    .obj_count = 0,
-    .obj_dir = OBJ_DIR,
-    .is_compiled = false,
-};
-
-int main(int argc, char **argv) {
-    NOB_GO_REBUILD_URSELF(argc, argv);
-
-    Nob_Cmd cmd = {0};
-
-    // OBJ_DIR is made internally
-    // exec dir has to be build separately
-    if (!nob_mkdir_if_not_exists(BUILD_DIR))
-        return false;
-
-    if (!build_exec(&cmd, &items, EXEC)) {
-        nob_log(NOB_ERROR, "Linking failed");
-    }
-
-    return 0;
-}
-*/
-// COMPILE:
-// clang build/build.c nob.c -o nob
 
 #endif

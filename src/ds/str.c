@@ -1,4 +1,4 @@
-#include "str.h"
+#include "ds/str.h"
 
 // sDS-like header types
 #define STR_TYPE_5 0
