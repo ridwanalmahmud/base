@@ -15,8 +15,7 @@ Pool *pool_init(size_t block_size, size_t num_blocks) {
     }
 
     // allocate blocks of memory
-    size_t actual_block_size =
-        (block_size < sizeof(Chunk)) ? sizeof(Chunk) : block_size;
+    size_t actual_block_size = (block_size < sizeof(Chunk)) ? sizeof(Chunk) : block_size;
     pool->memory = calloc(num_blocks, actual_block_size);
     if (!pool->memory) {
         log_err("Chunk allocation failed");

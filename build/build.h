@@ -70,8 +70,11 @@ typedef struct {
     bool is_compiled; // to ensure srcs are compiled only once
 } Build_Data;
 
+// Build executable
 bool build_exec(Nob_Cmd *cmd, Build_Data *items, const char *exec_name);
+// Build shared library
 bool build_shared(Nob_Cmd *cmd, Build_Data *items, const char *so_name);
+// Build static library
 bool build_static(Nob_Cmd *cmd, Build_Data *items, const char *ar_name);
 
 // USAGE:
