@@ -1,5 +1,5 @@
-#ifndef COLORS_H
-#define COLORS_H
+#ifndef UI_H
+#define UI_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -28,27 +28,5 @@ static const Colors COLOR_BLUE = {0, 0, 255};
 void apply_styling(Style style);
 // Use predefined styling for printing styled text
 void styled_text(Style style, const char *text);
-
-// USAGE:
-/*
-#include "ui/colors.h"
-
-int main(void) {
-    // define {r, g, b};
-    Colors fg = {170, 170, 170};
-    Colors bg = COLOR_RED;
-
-    // define {fg, bg, bold, italic, underline}
-    Style style = {fg, bg, false, false, true};
-
-    // print styled text
-    char *content = "Hello! gracious\n";
-    styled_text(style, content);
-
-    return 0;
-}
-*/
-// COMPILE:
-// clang ui/colors.c main.c -o main
 
 #endif

@@ -1,5 +1,5 @@
-#include "../base.h"
-#include "pool.h"
+#include "base.h"
+#include "mem.h"
 #include <stdlib.h>
 
 Pool *pool_init(size_t block_size, size_t num_blocks) {
