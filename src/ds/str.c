@@ -4,11 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 
 typedef struct {
-    uint16_t len;
-    uint16_t alloc;
+    size_t len;
+    size_t alloc;
 } _StrHdr;
+
+#define STR_INIT_ALLOC 16
+#define STR_PREALLOC 1024
 
 // get header pointer from String
 static inline _StrHdr *_str_hdr(String s) {
@@ -16,23 +20,19 @@ static inline _StrHdr *_str_hdr(String s) {
 }
 
 // get available space
-static inline uint16_t _str_avail(const String s) {
+static inline size_t _str_avail(const String s) {
     return (_str_hdr(s)->alloc - _str_hdr(s)->len);
 }
 
-static inline uint16_t _str_len(const String s) {
+static inline size_t _str_len(const String s) {
     return _str_hdr(s)->len;
 }
 
-static inline uint16_t _str_alloc(const String s) {
+static inline size_t _str_alloc(const String s) {
     return _str_hdr(s)->alloc;
 }
 
 String strNewLen(const void *s, size_t len) {
-    if (len > UINT16_MAX) {
-        return NULL; // for strings longer than 64KB
-    }
-
     _StrHdr *hdr = malloc(sizeof(_StrHdr) + len + 1);
     if (!hdr)
         return NULL;
@@ -81,36 +81,23 @@ String strGrow(String s, size_t addlen) {
     if (!s)
         return NULL;
 
-    _StrHdr *old_hdr = _str_hdr(s);
-
-    if (_str_avail(s) >= addlen) {
+    size_t avail = _str_avail(s);
+    if (avail >= addlen)
         return s;
+
+    _StrHdr *old_hdr = _str_hdr(s);
+    size_t current_alloc = old_hdr->alloc;
+    size_t new_alloc = current_alloc + addlen;
+
+    // Optimized growth calculation inlined
+    if (new_alloc < STR_PREALLOC) {
+        new_alloc = new_alloc * 2; // Double for small strings
+    } else {
+        new_alloc = new_alloc + (new_alloc / 2); // 1.5x for larger strings
     }
 
-    size_t len = old_hdr->len;
-
-    if (len > UINT16_MAX - addlen) {
-        return NULL;
-    }
-
-    size_t min_needed = len + addlen;
-    size_t new_alloc = old_hdr->alloc;
-
-    // exponential growth
-    while (new_alloc < min_needed) {
-        if (new_alloc > UINT16_MAX / 2) {
-            new_alloc = UINT16_MAX;
-            break;
-        }
-        new_alloc *= 2;
-    }
-
-    if (new_alloc < min_needed) {
-        new_alloc = UINT16_MAX;
-        if (new_alloc - len < addlen) {
-            return NULL;
-        }
-    }
+    // Align to 8-byte boundary for better performance
+    new_alloc = (new_alloc + 7) & ~7;
 
     _StrHdr *new_hdr = realloc(old_hdr, sizeof(_StrHdr) + new_alloc + 1);
     if (!new_hdr)
@@ -149,7 +136,7 @@ void strClear(String s) {
     s[0] = '\0';
 }
 
-uint16_t strLen(const String s) {
+size_t strLen(const String s) {
     return _str_len(s);
 }
 
@@ -172,9 +159,9 @@ int strCmp(const String s1, const String s2) {
     size_t l2 = _str_len(s2);
     size_t minlen = (l1 < l2) ? l1 : l2;
     int cmp = memcmp(s1, s2, minlen);
-    if (cmp == 0)
-        return l1 > l2 ? 1 : (l1 < l2 ? -1 : 0);
-    return cmp;
+    if (cmp != 0)
+        return cmp;
+    return (l1 > l2) - (l1 < l2);
 }
 
 void strtoLower(String s) {
@@ -195,43 +182,37 @@ String strnCpy(String dest, const char *src, size_t n) {
     if (!dest || !src)
         return dest;
 
-    if (n > UINT16_MAX) {
-        n = UINT16_MAX;
+    if (_str_alloc(dest) < n) {
+        dest = strGrow(dest, n - _str_len(dest));
+        if (!dest)
+            return NULL;
     }
-
-    dest = strGrow(dest, n - _str_len(dest));
-    if (!dest)
-        return NULL;
 
     memcpy(dest, src, n);
     strSetLen(dest, n);
-
     return dest;
 }
 
 String strCpy(String dest, const char *src) {
+    if (!src) {
+        strClear(dest);
+        return dest;
+    }
     return strnCpy(dest, src, strlen(src));
 }
 
-String strnCat(String s, const char *src, size_t n) {
-    if (!s || !src)
+String strnCat(String s, const void *src, size_t n) {
+    if (!s || !src || n == 0)
         return s;
 
-    size_t tlen = strlen(src);
-    if (tlen > n)
-        tlen = n;
-    if (tlen == 0)
-        return s;
-
-    s = strGrow(s, tlen);
+    size_t current_len = _str_len(s);
+    s = strGrow(s, n);
     if (!s)
         return NULL;
 
     _StrHdr *hdr = _str_hdr(s);
-    size_t len = hdr->len;
-
-    memcpy(s + len, src, tlen);
-    hdr->len = len + tlen;
+    memcpy(s + current_len, src, n);
+    hdr->len = current_len + n;
     s[hdr->len] = '\0';
 
     return s;
@@ -291,45 +272,118 @@ String strSlice(const String s, size_t start, size_t end) {
     return strNewLen(s + start, newlen);
 }
 
-static String _str_tok_r(String s, const char *delim, String *saveptr) {
-    if (!delim)
-        return NULL;
-
-    String token;
-
-    if (s) {
-        *saveptr = s;
-    } else if (!*saveptr) {
+String *strnSplit(const char *s, size_t len, const char *sep, size_t seplen, int *count) {
+    if (!s || !sep || !count || seplen < 1 || len == 0) {
+        *count = 0;
         return NULL;
     }
 
-    // skip leading delimiters
-    *saveptr += strspn(*saveptr, delim);
-    if (**saveptr == '\0') {
-        *saveptr = NULL;
+    int elements = 0;
+    int slots = len / 4; // heuristic based on input length
+    if (slots < 8)
+        slots = 8;
+    if (slots > 1000)
+        slots = 1000; // cap initial allocation
+
+    String *tokens = malloc(sizeof(String) * slots);
+    if (!tokens) {
+        *count = 0;
         return NULL;
     }
 
-    // find end of token
-    token = *saveptr;
-    *saveptr = token + strcspn(token, delim);
+    long start = 0;
 
-    if (**saveptr != '\0') {
-        **saveptr = '\0';
-        (*saveptr)++;
+    // single character separator
+    if (seplen == 1) {
+        char sep_char = sep[0];
+        for (long j = 0; j <= (long)(len - 1); j++) {
+            if (s[j] == sep_char) {
+                // handle array growth
+                if (elements >= slots - 1) {
+                    slots *= 2;
+                    String *new_tokens = realloc(tokens, sizeof(String) * slots);
+                    if (!new_tokens)
+                        goto cleanup;
+                    tokens = new_tokens;
+                }
+
+                tokens[elements] = strNewLen(s + start, j - start);
+                if (!tokens[elements])
+                    goto cleanup;
+                elements++;
+                start = j + 1;
+            }
+        }
     } else {
-        *saveptr = NULL;
+        // multi-character separator
+        for (long j = 0; j <= (long)(len - seplen); j++) {
+            if (memcmp(s + j, sep, seplen) == 0) {
+                if (elements >= slots - 1) {
+                    slots *= 2;
+                    String *new_tokens = realloc(tokens, sizeof(String) * slots);
+                    if (!new_tokens)
+                        goto cleanup;
+                    tokens = new_tokens;
+                }
+
+                tokens[elements] = strNewLen(s + start, j - start);
+                if (!tokens[elements])
+                    goto cleanup;
+                elements++;
+                start = j + seplen;
+                j = j + seplen - 1;
+            }
+        }
     }
 
-    return token;
+    // add final token
+    if (elements >= slots) {
+        slots++;
+        String *new_tokens = realloc(tokens, sizeof(String) * slots);
+        if (!new_tokens)
+            goto cleanup;
+        tokens = new_tokens;
+    }
+
+    tokens[elements] = strNewLen(s + start, len - start);
+    if (!tokens[elements])
+        goto cleanup;
+    elements++;
+
+    *count = elements;
+    return tokens;
+
+cleanup:
+    for (int i = 0; i < elements; i++) {
+        strFree(tokens[i]);
+    }
+    free(tokens);
+    *count = 0;
+    return NULL;
 }
 
-String strTok(String s, const char *delim) {
-    static String saveptr = NULL;
-    return _str_tok_r(s, delim, &saveptr);
+String *strSplit(const String s, const char *sep, int *count) {
+    if (!s || !sep || !count) {
+        *count = 0;
+        return NULL;
+    }
+    return strnSplit(s, _str_len(s), sep, strlen(sep), count);
+}
+
+void strFreeSplitRes(String *tokens, int count) {
+    if (!tokens)
+        return;
+
+    for (int i = 0; i < count; i++) {
+        strFree(tokens[i]);
+    }
+    free(tokens);
 }
 
 String strMapChars(String s, const char *from, const char *to, size_t setlen) {
+    if (!s || !from || !to)
+        return s;
+
     size_t j, i, l = _str_len(s);
 
     for (j = 0; j < l; j++) {

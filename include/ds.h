@@ -3,6 +3,7 @@
 
 /*
  * SDS style strings
+ * (FYI not so memory efficient 16 bytes header for String)
  */
 
 #include <stddef.h>
@@ -22,8 +23,8 @@ void strFree(String s);
 
 String strGrow(String s, size_t addlen);
 String strTrim(String s);
+size_t strLen(const String s);
 void strClear(String s);
-uint16_t strLen(const String s);
 void strSetLen(String s, size_t newlen);
 
 int strCmp(const String s1, const String s2);
@@ -32,10 +33,12 @@ void strtoUpper(String s);
 String strCpy(String dest, const char *src);
 String strnCpy(String dest, const char *src, size_t n);
 String strCat(String s, const char *src);
-String strnCat(String s, const char *src, size_t n);
+String strnCat(String s, const void *src, size_t n);
 String strCatFmt(String s, const char *fmt, ...);
 String strSlice(const String s, size_t start, size_t end);
-String strTok(String s, const char *delim);
+String *strnSplit(const char *s, size_t len, const char *sep, size_t seplen, int *count);
+String *strSplit(const String s, const char *sep, int *count);
+void strFreeSplitRes(String *tokens, int count);
 String strMapChars(String s, const char *from, const char *to, size_t setlen);
 
 #ifdef __cplusplus
