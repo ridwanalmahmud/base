@@ -4,12 +4,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Defines rgb value for foreground or background
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t r, g, b;
 } Colors;
 
-// Defined core styling
 typedef struct {
     Colors fg;
     Colors bg;
@@ -24,9 +26,11 @@ static const Colors COLOR_RED = {255, 0, 0};
 static const Colors COLOR_GREEN = {0, 255, 0};
 static const Colors COLOR_BLUE = {0, 0, 255};
 
-// Initializes styling
 void apply_styling(Style style);
-// Use predefined styling for printing styled text
 void styled_text(Style style, const char *text);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -11,7 +11,7 @@ Pool *pool_init(size_t block_size, size_t num_blocks) {
     Pool *pool = malloc(sizeof(Pool));
     if (!pool) {
         log_err("Pool allocation failed");
-        return nullptr;
+        return NULL;
     }
 
     // allocate blocks of memory
@@ -20,12 +20,12 @@ Pool *pool_init(size_t block_size, size_t num_blocks) {
     if (!pool->memory) {
         log_err("Chunk allocation failed");
         free(pool);
-        return nullptr;
+        return NULL;
     }
 
     pool->block_size = actual_block_size;
     pool->num_blocks = num_blocks;
-    pool->free_chunk = nullptr;
+    pool->free_chunk = NULL;
 
     // build free list (LIFO)
     char *mem = (char *)pool->memory; // (char *) for pointer arithmetic
@@ -41,7 +41,7 @@ Pool *pool_init(size_t block_size, size_t num_blocks) {
 void *pool_alloc(Pool *pool) {
     if (!pool || !pool->free_chunk || pool->block_size == 0) {
         log_err("Invalid pool or uninitialized pool");
-        return nullptr;
+        return NULL;
     }
 
     // remove first chunk from free list
