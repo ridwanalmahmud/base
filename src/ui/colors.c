@@ -21,11 +21,11 @@ void apply_styling(Style style) {
         bg_color(style.bg);
     }
 
-    if (style.bold)
+    if (style.text.bold)
         printf("\033[1m");
-    if (style.italic)
+    if (style.text.italic)
         printf("\033[3m");
-    if (style.underline)
+    if (style.text.underline)
         printf("\033[4m");
 }
 

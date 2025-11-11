@@ -13,11 +13,13 @@ typedef struct {
 } Colors;
 
 typedef struct {
+    bool bold, italic, underline;
+} Typography;
+
+typedef struct {
     Colors fg;
     Colors bg;
-    bool bold;
-    bool italic;
-    bool underline;
+    Typography text;
 } Style;
 
 static const Colors COLOR_BLACK = {0, 0, 0};
